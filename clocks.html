@@ -1,0 +1,231 @@
+<!doctype html>
+
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Clocks</title>
+  <style>
+    .text-clock-off {
+      color: #f3f4f5;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+</head>
+
+<body>
+  <div class="container pt-3" style="max-width: 648px;">
+    <div class="row">
+      <div class="col">
+        <h4>Текстовые часы</h4>
+      </div>
+    </div>
+    <div class="row mt-4">
+      <div class="col" id="matrix"></div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <div class="btn-group mt-5">
+          <button type="button" class="btn btn-secondary" onclick="setNow()">Now</button>
+          <button type="button" class="btn btn-secondary" onclick="scrollTime()">Time Machine</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/1.30.1/date_fns.min.js" integrity="sha512-F+u8eWHrfY8Xw9BLzZ8rG/0wIvs0y+JyRJrXjp3VjtFPylAEEGwKbua5Ip/oiVhaTDaDs4eU2Xtsxjs/9ag2bQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js" integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF" crossorigin="anonymous"></script>
+  <script>   
+    $(document).ready(function () {
+
+      const mainMatrix = [
+          ['о', 'д', 'в', 'и', 'а', 'н', 'о', 'ч', 'е', 'т', 'ы', 'р', 'е', 'и'],
+          ['ш', 'п', 'е', 'я', 'с', 'т', 'ь', 'в', 'о', 'с', 'е', 'м', 'ь', 'н'],
+          ['о', 'д', 'в', 'и', 'е', 'н', 'а', 'д', 'о', 'к', 'ц', 'а', 'т', 'ь'],
+          ['д', 'е', 'в', 'с', 'я', 'т', 'ь', 'с', 'ч', 'а', 'с', 'а', 'о', 'в'],
+          ['ш', 'п', 'е', 'я', 'с', 'т', 'ь', 'д', 'е', 'с', 'е', 'я', 'т', 'ь'],
+          ['о', 'д', 'и', 'в', 'е', 'и', 'н', 'а', 'д', 'ц', 'м', 'а', 'т', 'ь'],
+          ['т', 'р', 'и', 'д', 'ц', 'а', 'т', 'ь', 'ю', 'с', 'о', 'р', 'о', 'к'],
+          ['ч', 'е', 'т', 'ы', 'р', 'и', 'н', 'а', 'д', 'ц', 'а', 'т', 'ь', 'и'],
+          ['ш', 'п', 'е', 'я', 'с', 'т', 'н', 'а', 'о', 'д', 'ц', 'а', 'т', 'ь'],
+          ['в', 'о', 'с', 'е', 'м', 'ь', 'н', 'а', 'д', 'ц', 'а', 'т', 'ь', 'ю'],
+          ['д', 'е', 'в', 'я', 'т', 'ь', 'н', 'а', 'с', 'д', 'ц', 'а', 'т', 'ь'],
+          ['о', 'д', 'в', 'н', 'е', 'а', 'и', 'ч', 'е', 'т', 'ы', 'р', 'е', 'и'],
+          ['ш', 'п', 'е', 'я', 'с', 'т', 'ь', 'и', 'в', 'о', 'с', 'е', 'м', 'ь'],
+          ['д', 'е', 'в', 'я', 'т', 'ь', 'о', 'м', 'и', 'н', 'у', 'т', 'а', 'ы'],
+      ]
+
+      let $matrix = $(document).find('#matrix');
+
+      mainMatrix.forEach((row, rNum) => {
+        let $row = $('<div>', {class: `row mb-3 clock-row cl-row-${rNum}`});
+        row.forEach((symbol, sNum) => {
+          let $symbol = $('<div>', {class: `col clock-col`, id: `r-${rNum}-c-${sNum}`});
+          $symbol.html(`<span class="text-uppercase font-weight-bold text-clock-off">${symbol}</span>`);
+          $row.append($symbol);
+        });
+        $matrix.append($row);
+      });
+      const hours = {
+        1: draw(0, [0, 1, 3, 5]),
+        2: draw(0, [1, 2, 4]),
+        3: draw(0, [9, 11, 13]),
+        4: draw(0, [7, 8, 9, 10, 11, 12]),
+        5: draw(1, [1, 3, 5, 6]),
+        6: draw(1, [0, 2, 4, 5, 6]),
+        7: draw(1, [9, 10, 11, 12]),
+        8: draw(1, [7, 8, 9, 10, 11, 12]),
+        9: draw(3, [0, 1, 2, 4, 5, 6]),
+        10: draw(3, [0, 1, 3, 4, 5, 6]),
+        11: draw(2, [0, 1, 3, 5, 6, 7, 10, 11, 12, 13]),
+        12: draw(2, [1, 2, 4, 5, 6, 7, 10, 11, 12, 13]),
+      };
+
+      const minutes = {
+        1: draw(11, [0, 1, 3, 5]),
+        2: draw(11, [1, 2, 4]),
+        3: draw(11, [9, 11, 13]),
+        4: draw(11, [7, 8, 9, 10, 11, 12]),
+        5: draw(12, [1, 3, 5, 6]),
+        6: draw(12, [0, 2, 4, 5, 6]),
+        7: draw(12, [10, 11, 12, 13]),
+        8: draw(12, [8, 9, 10, 11, 12, 13]),
+        9: draw(13, [0, 1, 2, 3, 4, 5]),
+        10: draw(4, [7, 8, 9, 11, 12, 13]),
+        11: draw(5, [0, 1, 2, 6, 7, 8, 9, 11, 12, 13]),
+        12: draw(5, [1, 3, 4, 5, 7, 8, 9, 11, 12, 13]),
+        13: draw(7, [2, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        14: draw(7, [0, 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12]),
+        15: draw(8, [1, 3, 5, 6, 7, 9, 10, 11, 12, 13]),
+        16: draw(8, [0, 2, 4, 5, 6, 7, 9, 10, 11, 12, 13]),
+        17: draw(9, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        18: draw(9, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
+        19: draw(10, [0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13]),
+        20: draw(5, [1, 3, 7, 8, 9, 11, 12, 13]),
+        30: draw(7, [2, 4, 5, 8, 9, 10, 11, 12]),
+        40: draw(6, [9, 10, 11, 12, 13]),
+        50: draw(4, [1, 2, 3, 4, 5, 6, ,7, 8, 9, 10, 11, 12]),
+      };
+
+      const words = {
+        mhour: draw(3, [8, 9, 10]),
+        hour: draw(3, [8, 9, 10, 11]),
+        hours: draw(3, [8, 9, 10, 12, 13]),
+        min: draw(13, [7, 8, 9, 10, 11]),
+        minute: draw(13, [7, 8, 9, 10, 11, 12]),
+        minutes: draw(13, [7, 8, 9, 10, 11, 13]),
+      }
+
+      function draw(row, indexes) {
+        return (function execute() {
+          indexes.forEach(el => {
+            $matrix.find(`#r-${row}-c-${el} span`).removeClass('text-clock-off');
+          });
+        }).bind(null, row, indexes);
+      };
+
+      function clear(rFrom, rTo, cFrom, cTo) {
+        Array.from({length: rTo - rFrom}, (_ , i) => i + rFrom).forEach(row => {
+          Array.from({length: cTo - cFrom}, (_ , i) => i + cFrom).forEach(col => {
+            $matrix.find(`#r-${row}-c-${col} span`).addClass('text-clock-off');
+          });
+        });
+      }
+
+      window.setNow = function setNow() {
+        isNow = new Date(); 
+        clearInterval(timeInterval);
+        timeInterval = null;
+        setTime(new Date());
+      }
+
+      window.scrollTime = function scrollTime() {
+        clearInterval(timeInterval);
+        timeInterval = setInterval(() => {
+          isNow = dateFns.addMinutes(isNow, 1);
+          setTime(isNow);
+        }, 1000);
+      }
+
+      function setTime(date) {
+        clear(0, 14, 0, 14);
+        const [h, m] = dateFns.format(date, 'h:m').split(':').map(t => parseInt(t, 10));
+        switch(h) {
+          case 1:
+            hours[h]();
+            words.mhour();
+            break;
+          case 2:
+          case 3:
+          case 4:
+            hours[h]();
+            words.hour();
+            break;
+          default:
+            hours[h]();
+            words.hours();
+            break;
+        }
+        switch(m) {
+          case 1:
+            minutes[m]();
+            words.minute();
+            break;
+          case 2:
+          case 3:
+          case 4:
+            minutes[m]();
+            words.minutes();
+            break;
+          case 5:
+          case 6:
+          case 7:
+          case 8:
+          case 9:
+            minutes[m]();
+            words.min();
+            break;
+        }
+        if (m > 9 && m < 20) {
+          minutes[m]();
+          words.min();
+        }
+        if (m > 19) {
+          const small = m % 10;
+            minutes[m - small]();
+            switch(small) {
+              case 0: break;
+              case 1:
+                minutes[small]();
+                words.minute();
+                break;
+              case 2:
+              case 3:
+              case 4:
+                minutes[small]();
+                words.minutes();
+                break;
+              default:
+                minutes[small]();
+                words.min();
+                break;
+            }
+        }
+      }
+      
+      setTime(new Date());
+      let isNow = new Date();
+      let timeInterval = null;
+
+      setInterval(() => {
+        if (timeInterval !== null) {
+          isNow = new Date();
+          setTime(isNow);
+        }
+      }, 1000 * 60);
+    });
+  </script>
+</body>
+</html>
